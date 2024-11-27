@@ -40,8 +40,7 @@ function handleSignUp(event){
     })
     .then(response => response.json())
     .then(result => {
-        console.log('Sign up successful:', result);
-        alert('Sign-up successful!');
+        alert(result.message);
     })
     .catch(error => {
         console.error('Error during sign-up:', error);
@@ -59,6 +58,7 @@ function handleLogIn(event){
         email: email,
         password: password,
     };
+    
 
     // Send data to backend
     fetch('/login', {
@@ -70,8 +70,7 @@ function handleLogIn(event){
     })
     .then(response => response.json())
     .then(result => {
-        console.log('login up successful:', result);
-        alert('login successful!');
+        alert(result.message);
     })
     .catch(error => {
         console.error('Error during login:', error);

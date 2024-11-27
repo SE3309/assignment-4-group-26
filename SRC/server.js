@@ -48,19 +48,24 @@ app.post('/signup', (req, res) => {
 app.post('/login', (req, res) => {
     console.log("reached")
     const { email, password } = req.body;
-
+    console.log(password)
     const query = 'SELECT userPassword FROM Customer WHERE email= ?';
     const values = [email];
     console.log("hi")
     connection.query(query, values, (err, result) => {
+        console.log(`Input Password: ${password}`);
+        console.log(`Stored Password: ${result[0].userPassword}`);
+        console.log(`Are they equal?`, result[0].userPassword === password);
         if (err) {
             console.error('Error inserting into database:', err);
             res.status(500).send({ success: false, message: 'Database error' });
         } else {
-            if(result[0].userPassword==password){
+            if(result[0].userPassword===password){
+                console.log("user verified")
                 res.send({ success: true, message: 'User successfully verified' });
             }
             else{
+                console.log("User not verified")
                 res.send({ success: false, message: 'Incorrect Password' });
             }
             
