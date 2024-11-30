@@ -2,6 +2,7 @@
 
 document.getElementById('signup-form').addEventListener('submit', handleSignUp);
 document.getElementById('login-form').addEventListener('submit', handleLogIn);
+document.getElementById('search').addEventListener('click', searchRestaurants);
 
 function toggleForm(formType) {
     const signupContainer = document.getElementById('signup-container');
@@ -71,6 +72,24 @@ function handleLogIn(event){
     .then(response => response.json())
     .then(result => {
         alert(result.message);
+    })
+    .catch(error => {
+        console.error('Error during login:', error);
+        alert('An error occurred. Please try again.');
+    });
+}
+
+// to search restaurants
+function searchRestaurants (event) {
+
+    const query = document.getElementById('search-bar').value
+    
+
+    // send to back end
+    fetch(`/search-restaurants?name=${query}`)
+    .then(response => response.json())
+    .then(result => {
+        console.log(result);
     })
     .catch(error => {
         console.error('Error during login:', error);

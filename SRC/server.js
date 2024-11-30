@@ -74,7 +74,37 @@ app.post('/login', (req, res) => {
     console.log("bye")
 });
 
+// finding restaurants
+app.get('/search-restaurants', (req, res) => {
+    console.log('searching')
+    const searchTerm = `%${req.query.name}%`; 
+    // Assuming the name parameter is passed as a query parameter 
+    const query = 'SELECT * FROM Restaurant WHERE restaurantName LIKE ?'; 
+    const values = [searchTerm]; 
+    connection.query(query, values, (err, result) => { 
+        if (err) { 
+            console.error('Error querying the database:', err); 
+            res.status(500).send({ success: false, message: 'Database error' }); 
+        } 
+        else {
+            res.send({ success: true, data: result });
+        }
+    });
+    // try {
+    //     const query ='SELECT * '
+    //              'FROM Restaurant'
+    //              'WHERE name LIKE $1'
+    //     const searchTerm = `%${req.query.name}%`
+    //     // const values = [`%${req.query.name}%`]
+    //     const result = await pool.query(query, [searchTerm]);
+    //     console.log(result)
+    //     res.send(result.rows);
+    // } catch (error) {
+    //     console.error('error executing query', error.stack);
+    //     res.status(500).send('Server Error');
+    // }
 
+})
 
 // Handle 404 errors
 app.use((req, res) => {
