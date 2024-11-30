@@ -4,9 +4,11 @@ document.getElementById('signup-form').addEventListener('submit', handleSignUp);
 document.getElementById('login-form').addEventListener('submit', handleLogIn);
 document.getElementById('search').addEventListener('click', searchRestaurants);
 
+const signupContainer = document.getElementById('signup-container');
+const loginContainer = document.getElementById('login-container');
+const searchContainer = document.getElementById('search-container');
+
 function toggleForm(formType) {
-    const signupContainer = document.getElementById('signup-container');
-    const loginContainer = document.getElementById('login-container');
     
     if (formType === 'login') {
         signupContainer.style.display = 'none';
@@ -72,6 +74,9 @@ function handleLogIn(event){
     .then(response => response.json())
     .then(result => {
         alert(result.message);
+        loginContainer.style.display = 'none';
+        searchContainer.style.display = 'block';
+
     })
     .catch(error => {
         console.error('Error during login:', error);
@@ -90,6 +95,7 @@ function searchRestaurants (event) {
     .then(response => response.json())
     .then(result => {
         console.log(result);
+        
     })
     .catch(error => {
         console.error('Error during login:', error);
