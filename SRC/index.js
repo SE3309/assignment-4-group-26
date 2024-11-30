@@ -3,6 +3,7 @@
 document.getElementById('signup-form').addEventListener('submit', handleSignUp);
 document.getElementById('login-form').addEventListener('submit', handleLogIn);
 document.getElementById('search').addEventListener('click', searchRestaurants);
+document.getElementById('view-order-history').addEventListener('click', fetchOrderHistory);
 
 const signupContainer = document.getElementById('signup-container');
 const loginContainer = document.getElementById('login-container');
@@ -73,6 +74,10 @@ function handleLogIn(event){
     })
     .then(response => response.json())
     .then(result => {
+        console.log(result);
+        // Store customerId in localStorage
+        localStorage.setItem('customerId', result.customerId);
+
         loginContainer.style.display = 'none';
         searchContainer.style.display = 'block';
 
@@ -131,3 +136,47 @@ function searchRestaurants (event) {
     });
 }
 
+function fetchOrderHistory() {
+    const customerId = localStorage.getItem('customerId'); // Retrieve customerId from localStorage
+
+    if (!customerId) {
+        alert('Customer ID not found. Please log in again.');
+        return;
+    }
+
+    console.log(customerId)
+    fetch(`/order-history?customerId=${customerId}`)
+        .then(response => {
+            console.log('Response Status:', response.status);
+            return response.json();
+        })
+        .then(result => {
+            console.log('Order History Result:', result);
+            if (result.success && result.data) {
+                displayOrderHistory(result.data);
+            } else {
+                alert('Failed to fetch order history: ' + result.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching order history:', error);
+            alert('An error occurred. Please try again.');
+        });
+}
+
+function displayOrderHistory(orderHistory) {
+    const orderHistoryList = document.getElementById('order-history-list');
+    orderHistoryList.innerHTML = ''; // Clear any existing history
+
+    if (orderHistory.length === 0) {
+        orderHistoryList.innerHTML = '<li>No order history found.</li>';
+        return;
+    }
+
+    // Populate the list with order details
+    orderHistory.forEach(order => {
+        const listItem = document.createElement('li');
+        listItem.textContent = `Date: ${order.orderDate}, Restaurant: ${order.restaurantName}, Total Cost: $${order.totalCost.toFixed(2)}`;
+        orderHistoryList.appendChild(listItem);
+    });
+}

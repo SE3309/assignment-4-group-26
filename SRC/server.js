@@ -49,7 +49,7 @@ app.post('/login', (req, res) => {
     console.log("reached")
     const { email, password } = req.body;
     console.log(password)
-    const query = 'SELECT userPassword FROM Customer WHERE email= ?';
+    const query = 'SELECT userId, userPassword FROM Customer WHERE email= ?';
     const values = [email];
     console.log("hi")
     connection.query(query, values, (err, result) => {
@@ -62,7 +62,7 @@ app.post('/login', (req, res) => {
         } else {
             if(result[0].userPassword===password){
                 console.log("user verified")
-                res.send({ success: true, message: 'User successfully verified' });
+                res.send({ success: true, message: 'User successfully verified', customerId: result[0].userId });
             }
             else{
                 console.log("User not verified")
@@ -100,6 +100,47 @@ app.get('/search-restaurants', (req, res) => {
     });
 
 })
+
+// Define route to fetch personalized order history
+app.get('/order-history', (req, res) => {
+    const { customerId } = req.query;
+
+    if (!customerId) {
+        return res.status(400).send({ success: false, message: 'Customer ID is required' });
+    }
+
+    const query = `
+        SELECT 
+            po.orderDate,
+            r.restaurantName,
+            SUM(mi.itemPrice) AS totalCost
+        FROM 
+            PlacedOrder po
+        JOIN 
+            OrderItem oi ON po.orderId = oi.orderId
+        JOIN 
+            MenuItem mi ON oi.itemName = mi.itemName AND oi.restaurantId = mi.restaurantId
+        JOIN 
+            Restaurant r ON po.restaurantId = r.restaurantId
+        WHERE 
+            po.customerId = ?
+        GROUP BY 
+            po.orderId, po.orderDate, r.restaurantName
+        ORDER BY 
+            po.orderDate DESC;
+    `;
+
+    connection.query(query, [customerId], (err, results) => {
+        if (err) {
+            console.error('Error fetching order history:', err);
+            return res.status(500).send({ success: false, message: 'Database error' });
+        }
+
+        console.log('Order History Results:', results); // Log the results
+        res.send({ success: true, data: results });
+    });
+});
+
 
 // Handle 404 errors
 app.use((req, res) => {
