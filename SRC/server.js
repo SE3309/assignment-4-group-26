@@ -78,9 +78,17 @@ app.post('/login', (req, res) => {
 app.get('/search-restaurants', (req, res) => {
     console.log('searching')
     const searchTerm = `%${req.query.name}%`; 
-    // Assuming the name parameter is passed as a query parameter 
-    const query = 'SELECT * FROM Restaurant WHERE restaurantName LIKE ?'; 
-    const values = [searchTerm]; 
+    const limit = parseInt(req.query.limit, 10);
+
+    // query to grab all restaurant data + reviews + genre
+    const query = `SELECT r.*, g.genre, AVG(v.rating) AS average_review
+                   FROM Restaurant r, RestaurantGenre g, Review v
+                   WHERE r.restaurantName LIKE ? AND 
+                         r.restaurantID = g.restaurantID AND
+                         r.restaurantID = v.restaurantID
+                   GROUP BY r.restaurantID, g.genre
+                   LIMIT ?`; 
+    const values = [searchTerm, limit]; 
     connection.query(query, values, (err, result) => { 
         if (err) { 
             console.error('Error querying the database:', err); 

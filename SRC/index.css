@@ -19,6 +19,43 @@ body {
     box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
     animation: fadeIn 0.5s ease-in-out;
     position: relative;
+    max-height: 80vh; /* Set a maximum height */ 
+    overflow-y: auto; /* Enable vertical scrolling */
+}
+
+/* search container stuff */
+#search-container {
+    width: 80%;
+    background: #fff;
+    padding: 25px 20px;
+    border-radius: 12px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+    animation: fadeIn 0.5s ease-in-out;
+    position: relative;
+}
+
+#search-container ul {
+    list-style-type: none;
+    padding: 15px;
+}
+
+#search-container li {
+    background: #333;
+    padding: 10px;
+    margin: 10px;
+    border-radius: 10px;
+    color: #fff;
+    /* display:flex;
+    flex-wrap: wrap;
+    gap: 10px; */
+}
+/* 
+li p { 
+    margin: 0; 
+    padding: 5px; /* Add padding if needed
+}  */
+li button { 
+    margin: 5px;
 }
 
 /* Header */

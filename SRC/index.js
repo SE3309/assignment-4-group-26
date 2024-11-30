@@ -73,7 +73,6 @@ function handleLogIn(event){
     })
     .then(response => response.json())
     .then(result => {
-        alert(result.message);
         loginContainer.style.display = 'none';
         searchContainer.style.display = 'block';
 
@@ -88,18 +87,47 @@ function handleLogIn(event){
 function searchRestaurants (event) {
 
     const query = document.getElementById('search-bar').value
-    
+    const display_list = document.getElementById('restaurant-list')
+    display_list.innerHTML = ''; 
+    const limit = document.getElementById('results').value
 
     // send to back end
-    fetch(`/search-restaurants?name=${query}`)
+    fetch(`/search-restaurants?name=${query}&limit=${limit}`)
     .then(response => response.json())
     .then(result => {
-        console.log(result);
+        console.log(result.data);
+        data = result.data
+        data.forEach(item => {
+            const listItem = document.createElement('li'); 
+            const name = document.createElement('h3');
+            const address = document.createElement('p');
+            const genre_rating = document.createElement('p');
+            // can set up add review and place orders here with a function call
+            const add_review = document.createElement('button');
+            const order = document.createElement('button');
+            name.textContent = item.restaurantName;
+            address.textContent = item.streetNumber + ' ' + item.street + ', ' + item.city
+            roundedAverageReview = Math.round(item.average_review * 10) / 10
+            if (roundedAverageReview > 0) {
+                genre_rating.textContent = 'Genre: ' + item.genre + ' \tRating: ' + roundedAverageReview + '/5'
+            } else {
+                genre_rating.textContent = 'Genre: ' + item.genre
+            }  
+            add_review.textContent = 'Add Review'
+            order.textContent = 'Place Order'
+            
+            listItem.appendChild(name)
+            listItem.appendChild(address)
+            listItem.appendChild(genre_rating)
+            listItem.appendChild(add_review)
+            listItem.appendChild(order)
+            display_list.appendChild(listItem);
+        })
         
     })
     .catch(error => {
         console.error('Error during login:', error);
-        alert('An error occurred. Please try again.');
+        display_list.appendChild(document.createTextNode('An error occurred. Please try again.'))
     });
 }
 
