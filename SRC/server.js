@@ -90,19 +90,6 @@ app.get('/search-restaurants', (req, res) => {
             res.send({ success: true, data: result });
         }
     });
-    // try {
-    //     const query ='SELECT * '
-    //              'FROM Restaurant'
-    //              'WHERE name LIKE $1'
-    //     const searchTerm = `%${req.query.name}%`
-    //     // const values = [`%${req.query.name}%`]
-    //     const result = await pool.query(query, [searchTerm]);
-    //     console.log(result)
-    //     res.send(result.rows);
-    // } catch (error) {
-    //     console.error('error executing query', error.stack);
-    //     res.status(500).send('Server Error');
-    // }
 
 })
 
