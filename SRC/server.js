@@ -8,6 +8,12 @@ require('dotenv').config();
 
 app.use(express.json());
 app.use(cors());
+
+app.use((req, res, next) => {
+    console.log(req);
+    next()
+});
+
 app.use(express.static(path.join(__dirname, '../SRC')));
 
 const connection = mysql.createConnection({
@@ -15,8 +21,7 @@ const connection = mysql.createConnection({
     user: 'root',             // Your MySQL username
     password: process.env.DB_PASSWORD,  // Your MySQL password
     database: process.env.DB_NAME   // Name of the database you want to connect to
-  });
-
+});
 
 // Define routes
 app.get('/', (req, res) => {
@@ -24,7 +29,7 @@ app.get('/', (req, res) => {
 });
 
 app.get('/about', (req, res) => {
-  res.send('This is the About Page.');
+    res.send('This is the About Page.');
 });
 
 app.post('/signup', (req, res) => {
@@ -60,15 +65,15 @@ app.post('/login', (req, res) => {
             console.error('Error inserting into database:', err);
             res.status(500).send({ success: false, message: 'Database error' });
         } else {
-            if(result[0].userPassword===password){
+            if (result[0].userPassword === password) {
                 console.log("user verified")
                 res.send({ success: true, message: 'User successfully verified', customerId: result[0].userId });
             }
-            else{
+            else {
                 console.log("User not verified")
                 res.send({ success: false, message: 'Incorrect Password' });
             }
-            
+
         }
     });
     console.log("bye")
@@ -77,7 +82,7 @@ app.post('/login', (req, res) => {
 // finding restaurants
 app.get('/search-restaurants', (req, res) => {
     console.log('searching')
-    const searchTerm = `%${req.query.name}%`; 
+    const searchTerm = `%${req.query.name}%`;
     const limit = parseInt(req.query.limit, 10);
 
     // query to grab all restaurant data + reviews + genre
@@ -87,13 +92,13 @@ app.get('/search-restaurants', (req, res) => {
                          r.restaurantID = g.restaurantID AND
                          r.restaurantID = v.restaurantID
                    GROUP BY r.restaurantID, g.genre
-                   LIMIT ?`; 
-    const values = [searchTerm, limit]; 
-    connection.query(query, values, (err, result) => { 
-        if (err) { 
-            console.error('Error querying the database:', err); 
-            res.status(500).send({ success: false, message: 'Database error' }); 
-        } 
+                   LIMIT ?`;
+    const values = [searchTerm, limit];
+    connection.query(query, values, (err, result) => {
+        if (err) {
+            console.error('Error querying the database:', err);
+            res.status(500).send({ success: false, message: 'Database error' });
+        }
         else {
             res.send({ success: true, data: result });
         }
@@ -144,14 +149,14 @@ app.get('/order-history', (req, res) => {
 
 // Handle 404 errors
 app.use((req, res) => {
-  res.status(404).send('Page not found');
+    res.status(404).send('Page not found');
 });
 
 // Start the server
 app.listen(PORT, () => {
-  console.log(`Server is running on http://localhost:${PORT}`);
-//   console.log('DB Password:', process.env.DB_PASSWORD);
-//     console.log('DB Name:', process.env.DB_NAME);
+    console.log(`Server is running on http://localhost:${PORT}`);
+    //   console.log('DB Password:', process.env.DB_PASSWORD);
+    //     console.log('DB Name:', process.env.DB_NAME);
 
 });
 
