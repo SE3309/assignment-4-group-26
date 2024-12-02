@@ -112,6 +112,7 @@ app.post('/login', (req, res) => {
         } else {
             if (result[0].userPassword === password) {
                 console.log("user verified")
+                console.log(result[0].userId)
                 res.send({ success: true, message: 'User successfully verified', customerId: result[0].userId });
             }
             else {

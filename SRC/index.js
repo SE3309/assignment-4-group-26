@@ -77,7 +77,7 @@ function handleLogIn(event) {
             console.log(result);
             // Store customerId in localStorage
             localStorage.setItem('customerId', result.customerId);
-
+            console.log(localStorage.getItem('customerId'))
             loginContainer.style.display = 'none';
             searchContainer.style.display = 'block';
 
