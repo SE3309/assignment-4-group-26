@@ -1,5 +1,3 @@
-import { handleReviewClicked } from './review.js';
-
 document.getElementById('signup-form').addEventListener('submit', handleSignUp);
 document.getElementById('login-form').addEventListener('submit', handleLogIn);
 document.getElementById('search').addEventListener('click', searchRestaurants);
@@ -92,12 +90,40 @@ function handleLogIn(event) {
 
 // to search restaurants
 function searchRestaurants(event) {
+    const customerId = localStorage.getItem('customerId'); // Retrieve customerId from localStorage
+    let resturantId = null; // Retrieve customerId from localStorage
 
     const query = document.getElementById('search-bar').value
     const display_list = document.getElementById('restaurant-list')
     display_list.innerHTML = '';
     const limit = document.getElementById('results').value
-    const reviewContainer = document.getElementById('review-container').value
+    const reviewContainer = document.getElementById('review-container').style;
+    const reviewNotes = document.getElementById('review-notes');
+    const reviewRating = document.getElementById('review-rating');
+
+    const reviewSubmitButton = document.getElementById('enter-review');
+
+    reviewSubmitButton.addEventListener('click', () => {
+        fetch('/review', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                rating: reviewRating.value,
+                reviewNotes: reviewNotes.value,
+                customerId: customerId,
+                resturantId: resturantId
+            }),
+        }).then(response => response.json())
+            .then(result => {
+                console.log(result);
+            })
+            .catch(error => {
+                console.error('Error during add review:', error);
+                alert('An error occurred. Please try again.');
+            });
+    });
 
     // send to back end
     fetch(`/search-restaurants?name=${query}&limit=${limit}`)
@@ -114,7 +140,11 @@ function searchRestaurants(event) {
                 const add_review = document.createElement('button');
                 // attach review function
                 // add_review.addEventListener('click', () => handleReviewClicked(item.restaurantName));
-                add_review.addEventListener('click', () => reviewContainer.display === "none" ? reviewContainer.display = "block" : reviewContainer.display = "none");
+                add_review.addEventListener('click', () => {
+                    resturantId = item.restaurantId;
+                    reviewContainer.display === "none" ? reviewContainer.display = "block" : reviewContainer.display = "none";
+                    console.log(reviewContainer)
+                });
                 const order = document.createElement('button');
                 name.textContent = item.restaurantName;
                 address.textContent = item.streetNumber + ' ' + item.street + ', ' + item.city
@@ -221,7 +251,8 @@ function showMenu(restaurantId) {
                     if (index !== -1) {
                         selectedItems.splice(index, 1);
                         alert(`${item.itemName} removed from order!`);
-                    }});
+                    }
+                });
 
                 itemDiv.appendChild(itemName);
                 itemDiv.appendChild(itemDescription);
@@ -268,7 +299,7 @@ function placeOrder(restaurantId, menuItems) {
             }
         })
         .catch(error => console.error('Error placing order:', error));
-    }
+}
 
 function fetchOrderCost(orderId) {
     fetch(`/order-cost?orderId=${orderId}`)

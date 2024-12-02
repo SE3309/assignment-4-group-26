@@ -1,4 +1,7 @@
 // const express = require('express'); // Import Express
+import dotenv from 'dotenv'
+dotenv.config();
+
 import express from 'express'
 const app = express();             // Create an Express app
 // const cors = require('cors');
@@ -9,9 +12,10 @@ import path from 'path'
 import { fileURLToPath } from 'url';
 // const mysql = require('mysql2');
 import mysql from 'mysql2'
+import { connection } from './db.js';
+import reviewRouter from './routes/review.js'
 // require('dotenv').config();
-import dotenv from 'dotenv'
-dotenv.config();
+
 
 // __dirname workaround for ES6
 const __filename = fileURLToPath(import.meta.url);
@@ -28,17 +32,19 @@ app.use((req, res, next) => {
 
 app.use(express.static(path.join(__dirname, '../SRC')));
 
-const connection = mysql.createConnection({
-    host: 'localhost',        // Hostname of your database
-    user: 'root',             // Your MySQL username
-    password: process.env.DB_PASSWORD,  // Your MySQL password
-    database: process.env.DB_NAME   // Name of the database you want to connect to
-});
+// export const connection = mysql.createConnection({
+//     host: 'localhost',        // Hostname of your database
+//     user: 'root',             // Your MySQL username
+//     password: process.env.DB_PASSWORD,  // Your MySQL password
+//     database: process.env.DB_NAME   // Name of the database you want to connect to
+// });
 
 // Define routes
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, '../SRC/index.html'));
 });
+
+app.use('/review', reviewRouter);
 
 app.get('/about', (req, res) => {
     res.send('This is the About Page.');
