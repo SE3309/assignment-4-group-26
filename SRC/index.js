@@ -96,6 +96,7 @@ function searchRestaurants(event) {
     const display_list = document.getElementById('restaurant-list')
     display_list.innerHTML = '';
     const limit = document.getElementById('results').value
+    const reviewContainer = document.getElementById('review-container').value
 
     // send to back end
     fetch(`/search-restaurants?name=${query}&limit=${limit}`)
@@ -111,7 +112,8 @@ function searchRestaurants(event) {
                 // can set up add review and place orders here with a function call
                 const add_review = document.createElement('button');
                 // attach review function
-                add_review.addEventListener('click', () => handleReviewClicked(item.restaurantName));
+                // add_review.addEventListener('click', () => handleReviewClicked(item.restaurantName));
+                add_review.addEventListener('click', () => reviewContainer.display === "none" ? reviewContainer.display = "block" : reviewContainer.display = "none");
                 const order = document.createElement('button');
                 name.textContent = item.restaurantName;
                 address.textContent = item.streetNumber + ' ' + item.street + ', ' + item.city
