@@ -1,10 +1,21 @@
-const express = require('express'); // Import Express
+// const express = require('express'); // Import Express
+import express from 'express'
 const app = express();             // Create an Express app
-const cors = require('cors');
+// const cors = require('cors');
+import cors from 'cors';
 const PORT = 3000;                 // Define the port number
-const path = require('path');
-const mysql = require('mysql2');
-require('dotenv').config();
+// const path = require('path');
+import path from 'path'
+import { fileURLToPath } from 'url';
+// const mysql = require('mysql2');
+import mysql from 'mysql2'
+// require('dotenv').config();
+import dotenv from 'dotenv'
+dotenv.config();
+
+// __dirname workaround for ES6
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 app.use(express.json());
 app.use(cors());
