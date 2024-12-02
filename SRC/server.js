@@ -1,4 +1,7 @@
 // const express = require('express'); // Import Express
+import dotenv from 'dotenv'
+dotenv.config();
+
 import express from 'express'
 const app = express();             // Create an Express app
 // const cors = require('cors');
@@ -9,9 +12,10 @@ import path from 'path'
 import { fileURLToPath } from 'url';
 // const mysql = require('mysql2');
 import mysql from 'mysql2'
+import { connection } from './db.js';
+import reviewRouter from './routes/review.js'
 // require('dotenv').config();
-import dotenv from 'dotenv'
-dotenv.config();
+
 
 // __dirname workaround for ES6
 const __filename = fileURLToPath(import.meta.url);
@@ -21,23 +25,26 @@ app.use(express.json());
 app.use(cors());
 
 app.use((req, res, next) => {
-    console.log(req);
+    // console.log(req);
+    console.log(`${req.method} request for ${req.url}`);
     next()
 });
 
 app.use(express.static(path.join(__dirname, '../SRC')));
 
-const connection = mysql.createConnection({
-    host: 'localhost',        // Hostname of your database
-    user: 'root',             // Your MySQL username
-    password: process.env.DB_PASSWORD,  // Your MySQL password
-    database: process.env.DB_NAME   // Name of the database you want to connect to
-});
+// export const connection = mysql.createConnection({
+//     host: 'localhost',        // Hostname of your database
+//     user: 'root',             // Your MySQL username
+//     password: process.env.DB_PASSWORD,  // Your MySQL password
+//     database: process.env.DB_NAME   // Name of the database you want to connect to
+// });
 
 // Define routes
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, '../SRC/index.html'));
 });
+
+app.use('/review', reviewRouter);
 
 app.get('/about', (req, res) => {
     res.send('This is the About Page.');
@@ -184,6 +191,91 @@ app.get('/order-history', (req, res) => {
     });
 });
 
+app.get('/menu-items', (req, res) => {
+    const { restaurantId } = req.query;
+
+    if (!restaurantId) {
+        return res.status(400).send({ success: false, message: 'Restaurant ID is required' });
+    }
+
+    const query = 'SELECT itemName, itemDescription, pictureUrl, itemPrice FROM MenuItem WHERE restaurantId = ?';
+    connection.query(query, [restaurantId], (err, results) => {
+        if (err) {
+            console.error('Error fetching menu items:', err);
+            return res.status(500).send({ success: false, message: 'Database error' });
+        }
+
+        res.send({ success: true, menuItems: results });
+    });
+});
+
+app.post('/place-order', (req, res) => {
+    const { customerId, restaurantId, menuItems } = req.body;
+
+    if (!customerId || !restaurantId || !menuItems || menuItems.length === 0) {
+        return res.status(400).send({ success: false, message: 'Invalid input' });
+    }
+
+    // Insert into `PlacedOrder` table
+    const insertOrderQuery = `INSERT INTO PlacedOrder (customerId, restaurantId, orderDate) VALUES (?, ?, NOW())`;
+    connection.query(insertOrderQuery, [customerId, restaurantId], (err, result) => {
+        if (err) {
+            console.error('Error inserting order:', err);
+            return res.status(500).send({ success: false, message: 'Database error' });
+        }
+
+        const orderId = result.insertId; // Get the generated order ID
+        const orderItems = menuItems.map(item => [orderId, item.itemName, restaurantId]);
+
+        // Insert into `OrderItem` table
+        const insertOrderItemsQuery = `INSERT INTO OrderItem (orderId, itemName, restaurantId) VALUES ?`;
+        connection.query(insertOrderItemsQuery, [orderItems], (err) => {
+            if (err) {
+                console.error('Error inserting order items:', err);
+                return res.status(500).send({ success: false, message: 'Database error' });
+            }
+
+            res.send({ success: true, message: 'Order placed successfully!' });
+        });
+    });
+});
+
+app.get('/order-cost', (req, res) => {
+    const { orderId } = req.query;
+
+    if (!orderId) {
+        return res.status(400).send({ success: false, message: 'Order ID is required' });
+    }
+
+    const query = `
+        SELECT 
+            po.orderId,
+            SUM(mi.itemPrice) AS totalCost
+        FROM 
+            PlacedOrder po
+        JOIN 
+            OrderItem oi ON po.orderId = oi.orderId
+        JOIN 
+            MenuItem mi ON oi.itemName = mi.itemName AND oi.restaurantId = mi.restaurantId
+        WHERE 
+            po.orderId = ?
+        GROUP BY 
+            po.orderId;
+    `;
+
+    connection.query(query, [orderId], (err, results) => {
+        if (err) {
+            console.error('Error calculating order cost:', err);
+            return res.status(500).send({ success: false, message: 'Database error' });
+        }
+
+        if (results.length === 0) {
+            return res.status(404).send({ success: false, message: 'Order not found' });
+        }
+
+        res.send({ success: true, totalCost: results[0].totalCost });
+    });
+});
 
 // Handle 404 errors
 app.use((req, res) => {
