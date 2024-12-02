@@ -5,6 +5,7 @@ document.getElementById('login-form').addEventListener('submit', handleLogIn);
 document.getElementById('search').addEventListener('click', searchRestaurants);
 document.getElementById('view-order-history').addEventListener('click', fetchOrderHistory);
 
+
 const signupContainer = document.getElementById('signup-container');
 const loginContainer = document.getElementById('login-container');
 const searchContainer = document.getElementById('search-container');
@@ -122,7 +123,8 @@ function searchRestaurants(event) {
                     genre_rating.textContent = 'Genre: ' + item.genre
                 }
                 add_review.textContent = 'Add Review'
-                order.textContent = 'Place Order'
+                order.textContent = 'View Menu'
+                order.addEventListener('click', () => showMenu(item.restaurantID));
 
                 listItem.appendChild(name)
                 listItem.appendChild(address)
@@ -183,3 +185,112 @@ function displayOrderHistory(orderHistory) {
         orderHistoryList.appendChild(listItem);
     });
 }
+
+function showMenu(restaurantId) {
+    fetch(`/menu-items?restaurantId=${restaurantId}`)
+        .then(response => response.json())
+        .then(result => {
+            const menuContainer = document.getElementById('menu-container');
+            menuContainer.innerHTML = ''; // Clear previous menu
+
+            const menuItems = result.menuItems;
+            const selectedItems = []; // Array to store selected items
+
+            menuItems.forEach(item => {
+                const itemDiv = document.createElement('div');
+                const itemName = document.createElement('h4');
+                const itemDescription = document.createElement('p');
+                const itemPrice = document.createElement('p');
+                const addItemButton = document.createElement('button');
+                const removeItemButton = document.createElement('button');
+
+                itemName.textContent = item.itemName;
+                itemDescription.textContent = item.itemDescription;
+                itemPrice.textContent = `$${item.itemPrice}`;
+                addItemButton.textContent = 'Add to Order';
+                removeItemButton.textContent = 'Remove from Order';
+
+                addItemButton.addEventListener('click', () => {
+                    selectedItems.push({ itemName: item.itemName });
+                    alert(`${item.itemName} added to order!`);
+                });
+                removeItemButton.addEventListener('click', () => {
+                    const index = selectedItems.findIndex(selectedItem => selectedItem.itemName === item.itemName);
+                    if (index !== -1) {
+                        selectedItems.splice(index, 1);
+                        alert(`${item.itemName} removed from order!`);
+                    }});
+
+                itemDiv.appendChild(itemName);
+                itemDiv.appendChild(itemDescription);
+                itemDiv.appendChild(itemPrice);
+                itemDiv.appendChild(addItemButton);
+                menuContainer.appendChild(itemDiv);
+            });
+
+            const placeOrderButton = document.createElement('button');
+            placeOrderButton.textContent = 'Place Order';
+            placeOrderButton.addEventListener('click', () => placeOrder(restaurantId, selectedItems));
+            menuContainer.appendChild(placeOrderButton);
+        })
+        .catch(error => console.error('Error fetching menu:', error));
+}
+
+function placeOrder(restaurantId, menuItems) {
+    const customerId = localStorage.getItem('customerId'); // Retrieve customer ID from local storage
+
+    if (!customerId) {
+        alert('You need to log in to place an order!');
+        return;
+    }
+
+    const orderData = {
+        customerId,
+        restaurantId,
+        menuItems
+    };
+
+    fetch('/place-order', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(orderData),
+    })
+        .then(response => response.json())
+        .then(result => {
+            if (result.success) {
+                alert(result.message);
+            } else {
+                alert('Error placing order: ' + result.message);
+            }
+        })
+        .catch(error => console.error('Error placing order:', error));
+    }
+
+function fetchOrderCost(orderId) {
+    fetch(`/order-cost?orderId=${orderId}`)
+        .then(response => response.json())
+        .then(result => {
+            if (result.success) {
+                console.log(`Total Order Cost: ${result.totalCost}`);
+                alert(`Total Order Cost: $${result.totalCost}`);
+            } else {
+                alert(result.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching order cost:', error);
+            alert('An error occurred. Please try again.');
+        });
+}
+
+// function placeOrder() {
+//     const selectedItems = document.querySelectorAll('.menu-item.selected');
+//     const orderItems = Array.from(selectedItems).map(item => item.querySelector('strong').textContent);
+
+//     // Handle the order placement logic here
+//     console.log('Placing order for items:', orderItems);
+//     alert('Order placed for items: ' + orderItems.join(', '));
+// }
+
