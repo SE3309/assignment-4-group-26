@@ -21,6 +21,7 @@ app.use(express.json());
 app.use(cors());
 
 app.use((req, res, next) => {
+    // console.log(req);
     console.log(`${req.method} request for ${req.url}`);
     next()
 });
@@ -157,6 +158,91 @@ app.get('/order-history', (req, res) => {
     });
 });
 
+app.get('/menu-items', (req, res) => {
+    const { restaurantId } = req.query;
+
+    if (!restaurantId) {
+        return res.status(400).send({ success: false, message: 'Restaurant ID is required' });
+    }
+
+    const query = 'SELECT itemName, itemDescription, pictureUrl, itemPrice FROM MenuItem WHERE restaurantId = ?';
+    connection.query(query, [restaurantId], (err, results) => {
+        if (err) {
+            console.error('Error fetching menu items:', err);
+            return res.status(500).send({ success: false, message: 'Database error' });
+        }
+
+        res.send({ success: true, menuItems: results });
+    });
+});
+
+app.post('/place-order', (req, res) => {
+    const { customerId, restaurantId, menuItems } = req.body;
+
+    if (!customerId || !restaurantId || !menuItems || menuItems.length === 0) {
+        return res.status(400).send({ success: false, message: 'Invalid input' });
+    }
+
+    // Insert into `PlacedOrder` table
+    const insertOrderQuery = `INSERT INTO PlacedOrder (customerId, restaurantId, orderDate) VALUES (?, ?, NOW())`;
+    connection.query(insertOrderQuery, [customerId, restaurantId], (err, result) => {
+        if (err) {
+            console.error('Error inserting order:', err);
+            return res.status(500).send({ success: false, message: 'Database error' });
+        }
+
+        const orderId = result.insertId; // Get the generated order ID
+        const orderItems = menuItems.map(item => [orderId, item.itemName, restaurantId]);
+
+        // Insert into `OrderItem` table
+        const insertOrderItemsQuery = `INSERT INTO OrderItem (orderId, itemName, restaurantId) VALUES ?`;
+        connection.query(insertOrderItemsQuery, [orderItems], (err) => {
+            if (err) {
+                console.error('Error inserting order items:', err);
+                return res.status(500).send({ success: false, message: 'Database error' });
+            }
+
+            res.send({ success: true, message: 'Order placed successfully!' });
+        });
+    });
+});
+
+app.get('/order-cost', (req, res) => {
+    const { orderId } = req.query;
+
+    if (!orderId) {
+        return res.status(400).send({ success: false, message: 'Order ID is required' });
+    }
+
+    const query = `
+        SELECT 
+            po.orderId,
+            SUM(mi.itemPrice) AS totalCost
+        FROM 
+            PlacedOrder po
+        JOIN 
+            OrderItem oi ON po.orderId = oi.orderId
+        JOIN 
+            MenuItem mi ON oi.itemName = mi.itemName AND oi.restaurantId = mi.restaurantId
+        WHERE 
+            po.orderId = ?
+        GROUP BY 
+            po.orderId;
+    `;
+
+    connection.query(query, [orderId], (err, results) => {
+        if (err) {
+            console.error('Error calculating order cost:', err);
+            return res.status(500).send({ success: false, message: 'Database error' });
+        }
+
+        if (results.length === 0) {
+            return res.status(404).send({ success: false, message: 'Order not found' });
+        }
+
+        res.send({ success: true, totalCost: results[0].totalCost });
+    });
+});
 
 // Handle 404 errors
 app.use((req, res) => {

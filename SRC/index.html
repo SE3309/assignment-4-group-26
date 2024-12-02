@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,6 +8,7 @@
     <link rel="stylesheet" href="index.css">
     <script type="module" src="index.js"></script>
 </head>
+
 <body>
     <div class="container" id="signup-container">
         <h2>Sign Up</h2>
@@ -16,14 +18,14 @@
 
             <label for="signup-username">Last Name</label>
             <input type="text" id="signup-lastname" name="lastname" placeholder="Enter Last Name" required>
-            
+
             <label for="signup-email">Email</label>
             <input type="email" id="signup-email" name="email" placeholder="Enter email" required>
-            
+
             <label for="signup-password">Password</label>
             <input type="password" id="signup-password" name="password" placeholder="Enter Password" required>
-            
-            <button type="submit" >Sign Up</button>
+
+            <button type="submit">Sign Up</button>
         </form>
         <div class="toggle-link">
             <p>Already have an account? <a href="#" onclick="toggleForm('login')">Login</a></p>
@@ -35,10 +37,10 @@
         <form id="login-form">
             <label for="login-email">Email</label>
             <input type="text" id="login-email" name="email" placeholder="Enter email" required>
-            
+
             <label for="login-password">Password</label>
             <input type="password" id="login-password" name="password" placeholder="Enter password" required>
-            
+
             <button type="submit">Login</button>
         </form>
         <div class="toggle-link">
@@ -51,7 +53,7 @@
         <span>
             <input type="text" id="search-bar">
             <button id="search">Search</button>
-            # of Results: 
+            # of Results:
             <select id="results" name="results">
                 <option value="5">5</option>
                 <option value="10">10</option>
@@ -60,13 +62,26 @@
             </select>
         </span>
         <ul id="restaurant-list"></ul>
-        
+
         <hr>
 
         <h2>Order History</h2>
         <button id="view-order-history">View Order History</button>
         <ul id="order-history-list"></ul>
+
+        <hr>
+
+
+        <div class="container" id="menu-container" style="display: none;">
+            <h2>Menu Items</h2>
+            <div id="menu-items">
+
+            </div>
+            <button onclick="closeMenu()">Close</button>
+        </div>
     </div>
+
+
 
     <!-- Review Markup -->
     <!-- <div class="container" id="review-container" style="display: none;">
@@ -86,4 +101,5 @@
     </div> -->
 
 </body>
+
 </html>
