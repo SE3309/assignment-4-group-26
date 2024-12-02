@@ -44,21 +44,48 @@ app.get('/about', (req, res) => {
 });
 
 app.post('/signup', (req, res) => {
-    console.log("reached")
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.com$/;
+
+
+    console.log("Reached signup endpoint");
+
     const { firstName, lastName, email, password } = req.body;
 
-    const query = 'INSERT INTO Customer (fName, lName, email, userPassword) VALUES (?, ?, ?, ?)';
+    if (!emailRegex.test(email)) {
+        return res.status(400).send({ success: false, message: "Email must end with .com" });
+    }
+
+    const checkEmailQuery = 'SELECT * FROM Customer WHERE email = ?';
+    const insertUserQuery = 'INSERT INTO Customer (fName, lName, email, userPassword) VALUES (?, ?, ?, ?)';
     const values = [firstName, lastName, email, password];
-    console.log("hi")
-    connection.query(query, values, (err, result) => {
+
+    console.log("Checking if email is in use");
+
+    // Step 1: Check if the email already exists in the database
+    connection.query(checkEmailQuery, [email], (err, results) => {
         if (err) {
-            console.error('Error inserting into database:', err);
-            res.status(500).send({ success: false, message: 'Database error' });
-        } else {
-            res.send({ success: true, message: 'User added successfully' });
+            console.error('Error querying the database:', err);
+            return res.status(500).send({ success: false, message: 'Database error' });
         }
+
+        if (results.length > 0) {
+            // Email already exists
+            console.log("Email already in use:", email);
+            return res.status(400).send({ success: false, message: 'Email is already in use' });
+        }
+
+        // Step 2: If email does not exist, proceed to insert the new user
+        console.log("Inserting new user into the database");
+        connection.query(insertUserQuery, values, (err, result) => {
+            if (err) {
+                console.error('Error inserting into database:', err);
+                return res.status(500).send({ success: false, message: 'Database error' });
+            }
+
+            console.log("User added successfully");
+            res.send({ success: true, message: 'User added successfully' });
+        });
     });
-    console.log("bye")
 });
 
 app.post('/login', (req, res) => {
